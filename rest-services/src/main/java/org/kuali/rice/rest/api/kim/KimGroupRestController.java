@@ -26,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.sql.Timestamp;
 import java.util.*;
@@ -52,6 +51,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "GET",
             value = "Returns a kim group given the groupId",
+            notes = "Returns a kim group given the groupId",
             response = GroupResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -74,7 +74,8 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "POST",
-            value = "Creates a new group using the given Group.",
+            value = "Creates a new group using the given Group",
+            notes = "Creates a new group using the given Group, most fields are required",
             response = GroupResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -101,7 +102,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "PUT",
             value = "Updates an existing group using the given Group",
-            notes = "This will attempt to update an existing Group.The passed in Group" +
+            notes = "This will attempt to update an existing Group. The passed in Group" +
                     "must have it's Id set and be a valid group that already exists.If the passed in groupId and the group.id " +
                     "values are different then this method will inactivate the old group and create a new group with the same " +
                     "members with the passed in groups properties.",
@@ -137,9 +138,11 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "GET",
-            value = "Get all the groups for a given principal, principal and namespaceCode or namespaceCode and groupName",
-            notes = "This will include all groups directly assigned as well as those inferred by the fact that they are" +
-                    " members of higher level groups.",
+            value = "Get all the groups for a given principal, principal and namespaceCode, or namespaceCode and groupName",
+            notes = "Get all the groups for a given principal, principal and namespaceCode, or namespaceCode and groupName. " +
+                    "One valid combination of params must be provided.  This will include all groups directly assigned " +
+                    "as well as those inferred by the fact that they are " +
+                    "members of higher level groups.",
             response = GroupResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -150,9 +153,9 @@ public class KimGroupRestController {
     @RequestMapping(method = RequestMethod.GET)
     public
     @ResponseBody
-    ResponseEntity<Iterable<GroupResource>> retrieveGroups(@ApiParam(value = "The id of the Principal") @QueryParam("principalId") String principalId,
-                                                           @ApiParam(value = "The namespace code of the desired Groups to return") @QueryParam("namespaceCode") String namespaceCode,
-                                                           @ApiParam(value = "String that matches the desired Group's name") @QueryParam("groupName") String groupName) {
+    ResponseEntity<Iterable<GroupResource>> retrieveGroups(@ApiParam(value = "The id of the Principal") @RequestParam(value = "principalId", required = false) String principalId,
+                                                           @ApiParam(value = "The namespace code of the desired Groups to return") @RequestParam(value = "namespaceCode", required = false) String namespaceCode,
+                                                           @ApiParam(value = "String that matches the desired Group's name") @RequestParam(value = "groupName", required = false) String groupName) {
         List<Group> groupList = null;
 
         if (StringUtils.isNotBlank(principalId) && StringUtils.isBlank(namespaceCode)) {
@@ -178,7 +181,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "GET",
             value = "Get all the group ids for a given principal or principal and namespaceCode",
-            notes = "This will include all groups directly assigned as well as those inferred by the fact that they are members of higher level groups.",
+            notes = "Get all the group ids for a given principal or principal and namespaceCode.  This will include all groups directly assigned as well as those inferred by the fact that they are members of higher level groups.",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -189,8 +192,8 @@ public class KimGroupRestController {
     @RequestMapping(value = "/group-refs", method = RequestMethod.GET)
     public
     @ResponseBody
-    ResponseEntity<Iterable<Link>> retrieveGroupRefs(@ApiParam(value = "The id of the Principal") @QueryParam("principalId") String principalId,
-                                                     @ApiParam(value = "The namespace code of the desired Groups to return") @QueryParam("namespaceCode") String namespaceCode) {
+    ResponseEntity<Iterable<Link>> retrieveGroupRefs(@ApiParam(value = "The id of the Principal") @RequestParam("principalId") String principalId,
+                                                     @ApiParam(value = "The namespace code of the desired Groups to return") @RequestParam(value = "namespaceCode", required = false) String namespaceCode) {
 
         List<String> groupIds = new ArrayList<String>();
 
@@ -216,6 +219,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "GET",
             value = "Get a group member given a groupId and memberId",
+            notes = "Get a group member given a groupId and memberId",
             response = GroupMemberResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -246,6 +250,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "GET",
             value = "Gets a list of group members that belong to the group",
+            notes = "Gets a list of group members that belong to the group by groupId",
             response = GroupMemberResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -273,7 +278,8 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "GET",
             value = "Gets a list of group member ids of type PRINCIPAL given a group id",
-            notes = "If directMembersOnly is true the list will contain only direct member principal ids otherwise it will contain all member principal ids." +
+            notes = "Gets a list of group member ids of type PRINCIPAL given a group id. " +
+                    "If directMembersOnly is true the list will contain only direct member principal ids otherwise it will contain all member principal ids. " +
                     "By default it is false",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
@@ -284,7 +290,7 @@ public class KimGroupRestController {
     )
     @RequestMapping(value = "/{groupId}/member-refs/principal", method = RequestMethod.GET)
     public ResponseEntity<Iterable<Link>> getDirectPrincipalMemberRefsForGroup(@ApiParam(value = "The id of the group", required = true) @PathVariable("groupId") String groupId,
-                                                                               @ApiParam(value = "Flag for direct members") @QueryParam("directMembersOnly") boolean directMembersOnly) {
+                                                                               @ApiParam(value = "Flag for direct members") @RequestParam(value = "directMembersOnly", required = false) boolean directMembersOnly) {
         List<String> memberIds = null;
 
         if (directMembersOnly) {
@@ -307,7 +313,8 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "GET",
             value = "Gets a list of group member ids of type GROUP given a group id",
-            notes = "If directMembersOnly is true the list will contain only direct member group ids otherwise it will contain all member group ids." +
+            notes = "Gets a list of group member ids of type GROUP given a group id. " +
+                    "If directMembersOnly is true the list will contain only direct member group ids otherwise it will contain all member group ids." +
                     "By default it is false",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
@@ -318,7 +325,7 @@ public class KimGroupRestController {
     )
     @RequestMapping(value = "/{groupId}/member-refs/group", method = RequestMethod.GET)
     public ResponseEntity<Iterable<Link>> getGroupMemberRefsForGroup(@ApiParam(value = "The id of the group", required = true) @PathVariable("groupId") String groupId,
-                                                                     @ApiParam(value = "Flag for direct members") @QueryParam("directMembersOnly") boolean directMembersOnly) {
+                                                                     @ApiParam(value = "Flag for direct members") @RequestParam(value = "directMembersOnly", required = false) boolean directMembersOnly) {
 
         List<String> memberIds = null;
 
@@ -342,7 +349,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "PUT",
             value = "Adds a new member of type PRINCIPAL to the group",
-            notes = "The member should be an existing principal",
+            notes = "Adds a new member of type PRINCIPAL to the group; the member should be an existing principal",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -372,7 +379,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "PUT",
             value = "Adds a new member of type GROUP to the group",
-            notes = "The group should be an existing group",
+            notes = "Adds a new member of type GROUP to the group; the group should be an existing group",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -402,6 +409,7 @@ public class KimGroupRestController {
     @ApiOperation(
             httpMethod = "POST",
             value = "Add a new member to the group using a given group member",
+            notes = "Add a new member to the group using a given group member, most fields are required",
             response = GroupMemberResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -450,8 +458,9 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "PUT",
-            value = "Updates an existing group using the given GroupMember ",
-            notes = "The passed in GroupMember must have it's Id set and be a valid groupMember that already exists",
+            value = "Updates an existing group using the given GroupMember",
+            notes = "Updates an existing group using the given GroupMember.  " +
+                    "The passed in GroupMember must have it's Id set and be a valid groupMember that already exists",
             response = GroupMemberResource.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -476,7 +485,8 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "DELETE",
-            value = "Deletes an existing member from a Group depending on whether it is of type PRINCIPAL or GROUP",
+            value = "Deletes an existing member from a Group",
+            notes = "Deletes an existing member from a Group regardless of whether it is of type PRINCIPAL or GROUP",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -516,7 +526,8 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "DELETE",
-            value = "Removes all members from the group with the given groupId.",
+            value = "Removes all members from the group with the given groupId",
+            notes = "Removes all members from the group with the given groupId",
             response = Link.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -539,8 +550,16 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "GET",
-            value = "Lists groups using paging and limiting results",
-            notes = "Filters can be applied to limit results",
+            value = "Lists groups using filtering, indexing, and limits.",
+            notes = "Lists groups using filtering, indexing, and limits. A filter MUST be supplied.  Limit and startIndex can be " +
+                    "useds to page results.  Filters that can be used: <br/>" +
+                    "groupId<br/>" +
+                    "namespaceCode<br/>" +
+                    "name<br/>" +
+                    "description<br/>" +
+                    "kimTypeId<br/>" +
+                    "active<br/>" +
+                    "versionNumber",
             response = RicePagedResources.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
@@ -645,8 +664,17 @@ public class KimGroupRestController {
 
     @ApiOperation(
             httpMethod = "GET",
-            value = "Lists group Members using paging and limiting results",
-            notes = "Filters can be applied to limit results",
+            value = "Lists group members using filtering, indexing, and limits.",
+            notes = "Lists group members using filtering, indexing, and limits.  A filter must be supplied.  Limit and startIndex can be " +
+                    "useds to page results.  Filters that can be used: <br/>" +
+                    "id<br/>" +
+                    "groupId<br/>" +
+                    "memberId<br/>" +
+                    "typeCode<br/>" +
+                    "activeFromDate<br/>" +
+                    "activeToDate<br/>" +
+                    "versionNumber<br/>" +
+                    "active",
             response = RicePagedResources.class,
             authorizations = {@Authorization(value = "oauth2",
                     scopes = {
